@@ -1,7 +1,8 @@
 This is our custom GOOSE injection attack tool. 
 SETUP:
-1)Download Zip File
-2)Extract Zip File into desired output location
+
+1) Download Zip File
+2) Extract Zip File into desired output location
 3) Choose between our 3 GUI options 
 3A) most updated version is "LATEST_simplified_with_interface_option"
 4) Run the main method
