@@ -7,6 +7,7 @@ SETUP:
 3A) most updated version is "LATEST_simplified_with_interface_option"
 4) Run the main method
 5) to make executables for other versions follow the directions:
+   
   a. Install required dependancies
   b. Install the pyinstaller module (at time of writing I was using 6.4.0)
   c. In command prompt, navigate to the directory which contains main.py
