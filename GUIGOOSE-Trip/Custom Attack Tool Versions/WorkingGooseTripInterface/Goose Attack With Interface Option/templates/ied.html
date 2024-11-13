@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Attack Tool - IED</title>
+{% endblock %}
+
+{% block settings %}
+
+{% endblock %}
+
+{% block body %}
+<h1>IED Status: <span id="target-status"></span></h1>
+
+<section class="buttons">
+    <div class="button-group">
+        <button id="button-goose-trip620" class="button-64" onclick="sendCommand('/attack/ied/goose/trip620')">Trip REF620</button>
+    </div>
+
+    <div class="button-group">
+        <button id="button-goose-untrip620" class="button-64" onclick="sendCommand('/attack/ied/goose/untrip620')">unTrip REF620</button>
+    </div>
+
+    <div>
+    </div>
+</section>
+
+<h2>Log</h2>
+<div id="log" class="log-window"></div>
+{% endblock %}
+
+            {% block defIp %}setDefaultIp("192.168.219.0");{% endblock %}
+
+{% block script %}
+    function refreshStatus() {
+        $.ajax({
+            url: "/status/ping",
+            type: "get",
+            success: function(data) {
+                $("#target-status").html(data);
+            },
+            complete: function() {
+                setTimeout(refreshStatus, 1000);
+            }
+        });
+    }
+{% endblock %}
