@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='favicon/manifest.json') }}">
+	<meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="theme-color" content="#ffffff">
+    <style>
+        @font-face {
+            font-family: 'righteous';
+            src: url("{{ url_for('static', filename='/fonts/righteous.woff2') }}") format('woff2'),
+                 url("{{ url_for('static', filename='/fonts/righteous.woff') }}")format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'pixeltype';
+            src: url("{{ url_for('static', filename='/fonts/pixeltype.woff2') }}") format('woff2'),
+                 url("{{ url_for('static', filename='/fonts/pixeltype.woff') }}")format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'smallpixel';
+            src: url("{{ url_for('static', filename='/fonts/smallpixel.woff2') }}") format('woff2'),
+                 url("{{ url_for('static', filename='/fonts/smallpixel.woff') }}")format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'callingcode';
+            src: url("{{ url_for('static', filename='/fonts/callingcode.woff2') }}") format('woff2'),
+                 url("{{ url_for('static', filename='/fonts/callingcode.woff') }}")format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+    </style>
+    {% block head %} {% endblock %}
+</head>
+<body>
+<div class="settings">
+	<input id="settings-toggle" class="settings-toggle" type="checkbox" />
+        <label for="settings-toggle">
+        <svg class="icon-menu-toggle" viewBox="0 0 60 60">
+            <g class="icon-group">
+                <g class="icon-settings">
+                    <circle cx="30" cy="30" r="15" />
+                    <path d="M 6 30 L 54 30" />
+                    <path d="M 30 6 L 30 54" />
+                </g>
+                <g class="icon-settings-close">
+                    <path d="M 15 15 L 45 45" />
+                    <path d="M 15 45 L 45 15" />
+                </g>
+            </g>
+        </svg>
+    </label>
+    <div class="settings-content">
+        <div class="number-input">
+            <button onclick="this.parentNode.querySelector('input[type=number]').stepDown();this.parentNode.querySelector('input[type=number]').onchange()">-</button>
+            <input class="ip-octet" id="octet1" type="number" min="0" max="255" step="1" onchange="updateIp()"/>
+            <button onclick="this.parentNode.querySelector('input[type=number]').stepUp();this.parentNode.querySelector('input[type=number]').onchange()">+</button>
+        </div>
+        <div class="number-input">
+            <button onclick="this.parentNode.querySelector('input[type=number]').stepDown();this.parentNode.querySelector('input[type=number]').onchange()">-</button>
+            <input class="ip-octet" id="octet2" type="number" min="0" max="255" step="1" onchange="updateIp()"/>
+            <button onclick="this.parentNode.querySelector('input[type=number]').stepUp();this.parentNode.querySelector('input[type=number]').onchange()">+</button>
+        </div>
+        <div class="number-input">
+            <button onclick="this.parentNode.querySelector('input[type=number]').stepDown();this.parentNode.querySelector('input[type=number]').onchange()">-</button>
+            <input class="ip-octet" id="octet3" type="number" min="0" max="255" step="1" onchange="updateIp()"/><br>
+            <button onclick="this.parentNode.querySelector('input[type=number]').stepUp();this.parentNode.querySelector('input[type=number]').onchange()">+</button>
+        </div>
+        <div class="number-input">
+            <button onclick="this.parentNode.querySelector('input[type=number]').stepDown();this.parentNode.querySelector('input[type=number]').onchange()">-</button>
+            <input class="ip-octet" id="octet4" type="number" min="0" max="255" step="1" onchange="updateIp()"/><br>
+            <button onclick="this.parentNode.querySelector('input[type=number]').stepUp();this.parentNode.querySelector('input[type=number]').onchange()">+</button>
+        </div>
+		<div class="interface-selection">
+			<div class="accordion">
+				<button id="button-interfaces" class="accordion-button">Interface</button>
+				<div class="accordion-content">
+					<div class="button-group" id="interface-selection-parent">
+						<button id="Interface-Wi-FI" class="attack-button" onclick="updateInterface('Wi-Fi')">Wi-Fi</button>
+					</div>
+				</div>
+			</div>
+		</div>
+    </div>
+</div>
+
+<main class="main-content">
+    <div class="logo">
+        <img src="{{ url_for('static', filename='img/GOOSEATTACKER.png')}}" alt="Attack Tool">
+    </div>
+{% block body %} {% endblock %}
+</main>
+</div>
+<script src="{{ url_for('static', filename='script/jquery-3.5.1.min.js') }}"></script>
+<script type="text/javascript">
+    $(window).on('load',function(){
+        refreshStatus();
+        refreshLog();
+        {% block defIp %} {% endblock %}
+        refreshIp();
+		refreshInterfaces();
+		setDefaultInterface();
+    });
+
+    document.querySelectorAll('.accordion-button').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle('accordion-button--active');
+        });
+    });
+
+    document.querySelectorAll('.settings-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle('settings--active');
+        });
+    });
+
+    function disableButtons(status) {
+        var buttons = document.getElementsByClassName("attack-button");
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].disabled = status;
+            }
+    }
+
+    function sendCommand(url) {
+        disableButtons(true);
+        $.ajax({
+            url: url,
+            type: "post",
+            success: function(data) {
+                if (data=="OK"){disableButtons(false);};
+                refreshLog();
+            }
+        });
+    }
+
+    function updateIp() {
+        var a = document.getElementById("octet1").value.toString();
+        var b = document.getElementById("octet2").value.toString();
+        var c = document.getElementById("octet3").value.toString();
+        var d = document.getElementById("octet4").value.toString();
+        var ip = a + "." + b + "." + c + "." + d
+        $.ajax({
+            url: "/update/target",
+            type: "post",
+            data: {'ip':ip},
+            success: function(data) {
+                if (data=="OK"){
+                    refreshLog();
+                }
+            }
+        });
+    }
+	
+	function updateInterface(newInterface) {
+		$.ajax({
+            url: "/update/interface",
+            type: "post",
+            data: {'interface':newInterface},
+            success: function(data) {
+                if (data=="OK"){
+                    refreshLog();
+                }
+            }
+        });
+    }
+
+    function setDefaultIp(ip) {
+        $.ajax({
+            url: "/update/target",
+            type: "post",
+            data: {'ip':ip},
+            success: function(data) {
+                if (data=="OK"){
+                    refreshLog();
+                }
+            }
+        });
+    }
+
+{% block script %} {% endblock %}
+
+    function refreshLog() {
+        $.ajax({
+            url: "/status/log",
+            type: "get",
+            success: function(data) {
+                $("#log").html(data);
+            }
+        });
+    }
+
+    function refreshIp() {
+        $.ajax({
+            url: "/update/target",
+            type: "get",
+            success: function(data) {
+                var arrayIp = data.split(".");
+                $("#octet1").val(parseInt(arrayIp[0]));
+                $("#octet2").val(parseInt(arrayIp[1]));
+                $("#octet3").val(parseInt(arrayIp[2]));
+                $("#octet4").val(parseInt(arrayIp[3]));
+            },
+        });
+    }
+	
+	function refreshInterfaces() {
+        $.ajax({
+            url: "/update/interface",
+            type: "get",
+            success: function(data) {
+                
+				// Delete all current interfaces first
+				const myNode = document.getElementById("interface-selection-parent");
+				myNode.innerHTML = '';
+				
+				// Go through each interface in the returned array
+				// and add it as the correct HTML button in the Interface accordion
+				var interfaceArray = data.split("||");
+                for (let i = 0; i < interfaceArray.length; i++)
+				{
+					interfaceButton = document.createElement("button");
+					interfaceButton.id = "Interface-"+interfaceArray[i];
+					interfaceButton.classList.add("attack-button");
+					interfaceButton.setAttribute("onclick","updateInterface('"+interfaceArray[i]+"')");
+					interfaceButton.innerHTML = interfaceArray[i];
+					
+					document.getElementById("interface-selection-parent").appendChild(interfaceButton);
+				}
+            },
+        });
+    }
+	
+	function setDefaultInterface() {
+        $.ajax({
+            url: "/update/interface",
+            type: "get",
+            success: function(data) {
+				// Just use first interface from array as default one for now
+				var interfaceArray = data.split("||");
+                var defaultInterface = interfaceArray[0];
+				updateInterface(defaultInterface);
+            },
+        });
+    }
+</script>
+</body>
+</html>
