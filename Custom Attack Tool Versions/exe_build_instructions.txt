@@ -1,0 +1,7 @@
+(the following are instructions to build the entire python flask project to a single exe file)
+
+1. Install the pyinstaller module (at time of writing I was using 6.4.0)
+2. In command prompt, navigate to the directory which contains main.py
+	-This should be inside of "attack_tool_web-master"
+3. Run the following command: pyinstaller -F --add-data "templates;templates" --add-data "static;static" --add-data "lib;lib" main.py
+4. You should see a "build" and "dist" folder created in the current directory. The exe will be contained in the "dist" folder.
